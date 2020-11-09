@@ -60,23 +60,14 @@ services:
         hard: -1
     cap_add:
       - ALL
+    restart: on-failure
     deploy:
       replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 10s
       resources:
         limits:
-          cpus: '1'
           memory: 256M
         reservations:
-          cpus: '1'
-          memory: 1G
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 10s
+          memory: 256M
     ports:
       - 9200:9200
       - 9300:9300
@@ -95,23 +86,14 @@ services:
         hard: -1
     cap_add:
       - ALL
+    restart: on-failure
     deploy:
       replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 10s
       resources:
         limits:
-          cpus: '1'
           memory: 256M
         reservations:
-          cpus: '1'
           memory: 256M
-      restart_policy:
-        condition: on-failure
-        delay: 30s
-        max_attempts: 3
-        window: 120s
     networks:
       - gabi
 
@@ -124,7 +106,7 @@ services:
       - ../services/price-factors-crawler:/app
       - /app/node_modules
     environment:
-      - "FXCM_TOKEN=<your-token-here>"
+      - "FXCM_TOKEN=<your-fxcm-token>"
 networks:
   gabi:
     driver: bridge
