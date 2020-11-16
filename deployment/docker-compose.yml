@@ -40,46 +40,6 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=example
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
-    networks:
-      - gabi
-    volumes:
-      - type: bind
-        source: ./elasticsearch.yml
-        target: /usr/share/elasticsearch/config/elasticsearch.yml
-        read_only: true
-    environment:
-      - node.name=elasticsearch
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
-      - http.cors.enabled=true
-      - http.cors.allow-origin=*
-      - discovery.type=single-node
-    cap_add:
-      - ALL
-    restart: on-failure
-    ports:
-      - 9200:9200
-      - 9300:9300
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.8.0
-    ports:
-      - 5601:5601
-    volumes:
-      - type: bind
-        source: ./kibana.yml
-        target: /usr/share/kibana/config/kibana.yml
-        read_only: true
-    cap_add:
-      - ALL
-    restart: on-failure
-    networks:
-      - gabi
-    links:
-      - elasticsearch
-
   price-factors-crawler:
     build:
       context: ../services/price-factors-crawler
@@ -96,10 +56,26 @@ services:
       context: ../services/tweet-crawler
     networks:
       - gabi
+    restart: on-failure
+    volumes:
+      - ../services/tweet-crawler:/app
     environment:
-      - TOPIC=tweet
+      - "TOPIC=dad.tweet.0"
       - DEBUG=n
-      - "KAFKA_CLIENT=http://kafka:9092"
+      - "KAFKA=kafka:9092"
+
+  viewer:
+    build:
+      context: ../services/view
+    networks:
+      - gabi
+    restart: on-failure
+    volumes:
+      -  ../services/view:/app
+    environment:
+      - "TOPIC=dad.tweet.0"
+      - "KAFKA=kafka:9092"
+      - "ELASTICSEARCH=http://elasticsearch:9200"
 
 networks:
   gabi:
