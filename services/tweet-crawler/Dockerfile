@@ -1,4 +1,4 @@
-FROM python:3.6.9
+FROM python:3.7-alpine
 
 RUN pip3 install kafka
 RUN pip3 install tweepy

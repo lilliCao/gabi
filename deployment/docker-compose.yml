@@ -99,7 +99,7 @@ services:
     environment:
       - TOPIC=tweet
       - DEBUG=n
-      - "KAFKA_CLIENT=http://kafka:9092/"
+      - "KAFKA_CLIENT=http://kafka:9092"
 
 networks:
   gabi:
