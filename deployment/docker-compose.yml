@@ -1,4 +1,4 @@
-version: '3'
+version: '2'
 services:
   zookeeper:
     image: wurstmeister/zookeeper
@@ -37,65 +37,48 @@ services:
     networks:
       - gabi
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
     networks:
       - gabi
+    volumes:
+      - type: bind
+        source: ./elasticsearch.yml
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+        read_only: true
     environment:
-      - node.name=elasticsearch1
-      - cluster.name=docker-cluster
-      - cluster.initial_master_nodes=elasticsearch1
+      - node.name=elasticsearch
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms256M -Xmx256M"
+      - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
       - http.cors.enabled=true
       - http.cors.allow-origin=*
-      - network.host=_eth0_
-    ulimits:
-      nproc: 65535
-      memlock:
-        soft: -1
-        hard: -1
+      - discovery.type=single-node
     cap_add:
       - ALL
     restart: on-failure
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 256M
     ports:
       - 9200:9200
       - 9300:9300
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.8.0
-    environment:
-      SERVER_NAME: localhost
-      ELASTICSEARCH_URL: http://elasticsearch:9200/
     ports:
       - 5601:5601
-    ulimits:
-      nproc: 65535
-      memlock:
-        soft: -1
-        hard: -1
+    volumes:
+      - type: bind
+        source: ./kibana.yml
+        target: /usr/share/kibana/config/kibana.yml
+        read_only: true
     cap_add:
       - ALL
     restart: on-failure
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 256M
     networks:
       - gabi
+    links:
+      - elasticsearch
 
   price-factors-crawler:
     build:
@@ -106,7 +89,7 @@ services:
       - ../services/price-factors-crawler:/app
       - /app/node_modules
     environment:
-      - "FXCM_TOKEN=<your-fxcm-token>"
+      - "FXCM_TOKEN=0004ac72171d396154ddaebc87487cf326cfdd1e"
 
   tweet-crawler:
     build:
@@ -114,9 +97,9 @@ services:
     networks:
       - gabi
     environment:
-      - TOPIC:tweet
-      - DEBUG:n
-      - KAFKA_CLIENT:http://kafka:9092/
+      - TOPIC=tweet
+      - DEBUG=n
+      - "KAFKA_CLIENT=http://kafka:9092/"
 
 networks:
   gabi:
