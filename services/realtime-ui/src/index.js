@@ -3,6 +3,17 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import socketio from "socket.io-client";
+
+
+const socket = socketio("http://localhost:3000");
+socket.on("connect", () => {
+    socket.emit('subscribe', 'EURUSD');
+});
+socket.on("price", (data) => {
+    console.log("Price", data);
+});
+
 
 ReactDOM.render(
   <React.StrictMode>

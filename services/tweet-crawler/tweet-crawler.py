@@ -1,4 +1,3 @@
-import json
 import os
 from kafka import KafkaProducer
 from tweepy import Stream, OAuthHandler
@@ -23,6 +22,7 @@ def print_debug(s):
 class StdOutListener(StreamListener):
     def on_data(self, data):
         print_debug('Receving data and publishing data to {}'.format(topic))
+        print_debug(type(data))
         producer.send(topic, data)
         return True
 
@@ -32,9 +32,7 @@ class StdOutListener(StreamListener):
 
 auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
-producer = KafkaProducer(bootstrap_servers=[kafka],
-                         value_serializer=lambda x:
-                         json.dumps(x).encode('utf-8'))
+producer = KafkaProducer(bootstrap_servers=[kafka], value_serializer=lambda x: x.encode('utf-8'))
 l = StdOutListener()
 stream = Stream(auth, l)
 stream.filter(track=hashtag)
