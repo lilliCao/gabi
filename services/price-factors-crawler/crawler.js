@@ -138,7 +138,7 @@ class FXCMCrawler {
         try {
             const payload = JSON.parse(rawPayload);
             payload.Rates = payload.Rates.map(function (v) {
-                return v.toFixed(5);
+                return v
             });
             this.bus.emit('price_update', payload);
             this.lastUpdate[payload.Symbol] = getUnixSeconds();
