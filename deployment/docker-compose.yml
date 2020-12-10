@@ -120,6 +120,20 @@ services:
       - DEBUG=y
       - "KAFKA=kafka:9092"
 
+  news-crawler:
+    build:
+      context: ../services/news-crawler
+    networks:
+      - gabi
+    restart: on-failure
+    volumes:
+      - ../services/news-crawler:/app
+    environment:
+      - "TOPIC=dad.news.0"
+      - SCHEDULE=10
+      - PAGES=5
+      - "KAFKA=kafka:9092"
+
   viewer:
     build:
       context: ../services/view
