@@ -1,14 +1,5 @@
 import React, {useEffect, useRef} from 'react';
-import socketio from "socket.io-client";
-
-
-const socket = socketio("http://localhost:3000");
-socket.on("connect", () => {
-    socket.emit('subscribe', 'EURUSD');
-});
-socket.on("price", (data) => {
-    console.log("Price", data);
-});
+import './styles.css';
 
 function BaseChart({containerRef, chartRef, children}) {
     const chartContainerRef = containerRef;

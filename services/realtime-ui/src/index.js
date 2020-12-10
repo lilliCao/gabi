@@ -3,23 +3,17 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import socketio from "socket.io-client";
+import {SocketProvider} from "./SocketProvider";
+import {initSocket} from "./socket";
 
-
-const socket = socketio("http://localhost:3000");
-socket.on("connect", () => {
-    socket.emit('subscribe', 'EURUSD');
-});
-socket.on("price", (data) => {
-    console.log("Price", data);
-});
-
+const socket = initSocket("http://localhost:3000");
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+    <SocketProvider socket={socket} >
+        <App/>
+    </SocketProvider>
+    ,
+    document.getElementById('root')
 );
 
 // If you want to start measuring performance in your app, pass a function

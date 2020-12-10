@@ -21,9 +21,9 @@ export default {
         priceScale: {
             borderColor: '#485c7b',
         },
-        timeScale: {
-            borderColor: '#485c7b',
-        },
+        // timeScale: {
+        //     borderColor: '#485c7b',
+        // },
     },
     area: {
         topColor: 'rgba(38, 198, 218, 0.56)',

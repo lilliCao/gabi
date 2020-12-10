@@ -23,6 +23,7 @@ async function main() {
 
     const onPriceUpdate = (priceUpdate) => {
         const {symbol, ...data} = priceUpdate;
+        console.log('onPriceUpdate', data)
         store.putPrice(symbol, data);
         rtSocket.publishPrice(symbol, data);
     };

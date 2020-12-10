@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {Responsive, WidthProvider, Draggable} from 'react-grid-layout';
+import {Responsive, WidthProvider} from 'react-grid-layout';
 import RealtimeChart from "../../components/RealtimeChart";
 import useWindowDimensions from "../../hooks/useWindowDimensions";
 import Sidebar from "../../components/Sidebar";
@@ -26,7 +26,7 @@ function Dashboard() {
                               rowHeight={winHeight/12}
                               margin={[0,0]}
                               breakpoints={{lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0}}
-                              cols={{lg: 24, md: 24}}>
+                              cols={{lg: 24, md: 24, sm: 24, xs: 24, xxs: 24}}>
             <div key="0">
                 <Sidebar/>
             </div>
