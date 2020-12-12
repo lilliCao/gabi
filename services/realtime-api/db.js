@@ -9,8 +9,12 @@ class Datastore {
 
         this.putPrice = this.putPrice.bind(this);
         this.putCandle = this.putCandle.bind(this);
+        this.putNews = this.putNews.bind(this);
+
         this.getPrices = this.getPrices.bind(this);
         this.getCandles = this.getCandles.bind(this);
+        this.getNews = this.getNews.bind(this);
+
     }
 
     async connect() {
@@ -23,6 +27,7 @@ class Datastore {
         this._ensureConnection();
 
         symbol = this._sanitizeSymbol(symbol);
+        // highBid, lowBid, openBid, closeBid
         return this.db.collection(`${symbol}_${frame}`)
             .updateOne({ts: data['ts']}, {$set: data}, {upsert: true})
     }
@@ -35,11 +40,19 @@ class Datastore {
             .updateOne({updated: data['updated']}, {$set: data}, {upsert: true});
     }
 
+    putNews(symbol, data) {
+        this._ensureConnection();
+
+        symbol = this._sanitizeSymbol(symbol);
+        return this.db.collection(`${symbol}_news`)
+            .updateOne({url: data['url']}, {$set: data}, {upsert: true});
+    }
+
     getCandles(symbol, frame, from, to) {
         this._ensureConnection();
 
         symbol = this._sanitizeSymbol(symbol);
-        frame = this._sanitizeSymbol(frame);
+        const collection = `${symbol}_${frame}`;
         return this._toDocuments(
             this.db.collection(`${symbol}_${frame}`)
                 .find({ts: {$gte: from, $lte: to}}).sort({ts: 1})
@@ -53,6 +66,19 @@ class Datastore {
         return this._toDocuments(
             this.db.collection(`${symbol}`)
                 .find({updated: {$gte: from, $lte: to}}).sort({updated: 1})
+        );
+    }
+
+    getNews(symbol, offset, limit) {
+        this._ensureConnection();
+
+        symbol = this._sanitizeSymbol(symbol);
+        return this._toDocuments(
+            this.db.collection(`${symbol}_news`)
+                .find()
+                .sort({time: -1})
+                .skip(offset)
+                .limit(limit)
         );
     }
 

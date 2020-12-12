@@ -18,12 +18,13 @@ async function main() {
     const consumer = new KafkaConsumer({
         hosts: "kafka:9092",
         priceTopic: "dad.price.0",
-        candleTopic: "dad.candle.0"
+        candleTopic: "dad.candle.0",
+        newsTopic: "dad.news.0",
     });
 
     const onPriceUpdate = (priceUpdate) => {
         const {symbol, ...data} = priceUpdate;
-        console.log('onPriceUpdate', data)
+        //console.log('onPriceUpdate', data)
         store.putPrice(symbol, data);
         rtSocket.publishPrice(symbol, data);
     };
@@ -34,7 +35,15 @@ async function main() {
         rtSocket.publishCandle(symbol, frame, data);
     };
 
-    consumer.startConsuming(onPriceUpdate, onCandle);
+    const onNews = (newsUpdate) => {
+        const {symbol, ...data} = newsUpdate;
+        console.log('receive news', data.title)
+        store.putNews(symbol, data);
+        rtSocket.publishNews(symbol, data);
+    };
+
+
+    consumer.startConsuming(onPriceUpdate, onCandle, onNews);
     //apiServer.listen(port, () => {
     //    console.log(`Listening on port ${port}`);
     //})

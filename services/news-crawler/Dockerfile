@@ -1,5 +1,5 @@
 FROM python:3.7-alpine
-
+RUN apk update && apk add --virtual build-dependencies build-base gcc libffi-dev libxml2-dev libxslt-dev openssl-dev make
 RUN pip3 install kafka-python
 RUN pip3 install scrapy
 RUN pip3 install twisted

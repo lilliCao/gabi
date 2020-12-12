@@ -93,7 +93,6 @@ function HeaderToolbar({onChangeCurrency, onChangeInterval, onChangeChartType}) 
                         dropdownGap={-3}
                         onChange={handleSelectChartType}
                         itemRenderer={({item, methods}) => {
-                            console.log('item', item)
                             return (
                                 <div className={`item ${item.id === selectedChartTypeId ? 'item-selected' : ''}`}
                                      onClick={() => methods.addItem(item)}>

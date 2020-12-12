@@ -11,6 +11,7 @@ class RealtimeSocket {
             },
             //path: '/api/v1/connect',
         });
+        this.lastPrices = {};
     }
 
     startListening() {
@@ -31,7 +32,13 @@ class RealtimeSocket {
 
     publishPrice(symbol, data) {
         symbol = this._sanitizeSymbol(symbol);
+        this.lastPrices[symbol] = data;
         this.io.in(`${symbol}`).emit("price", data);
+    }
+
+    publishNews(symbol, data) {
+        symbol = this._sanitizeSymbol(symbol);
+        this.io.in(`${symbol}`).emit("news", data);
     }
 
     _sanitizeSymbol(symbol) {
@@ -44,6 +51,8 @@ class RealtimeSocket {
         }
         console.log(socket.id, "joined", room);
         socket.join(room.toUpperCase());
+        socket.emit('price', this.lastPrices[room]);
+        console.log("Send to", socket.id, this.lastPrices[room])
     }
 
     _isRoomValid(name) {

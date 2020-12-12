@@ -78,6 +78,17 @@ services:
     ports:
       - 27017:27017
 
+  candles-importer:
+    build:
+      context: ../services/candles-importer
+    networks:
+      - gabi
+    volumes:
+      - ../services/candles-importer:/app
+      - /app/node_modules
+    environment:
+      - "FXCM_TOKEN=0004ac72171d396154ddaebc87487cf326cfdd1e"
+
   price-factors-crawler:
     build:
       context: ../services/price-factors-crawler

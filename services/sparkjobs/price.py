@@ -8,8 +8,8 @@ from pyspark.sql.types import *
 def sliding_window(name, df, decimal_places=5):
     name = name.upper()
     frames = {
-        "M1": "1 minute",
-        "M30": "30 minutes",
+        "m1": "1 minute",
+        "m30": "30 minutes",
         "H1": "1 hour",
         "H4": "4 hours",
         "D1": "1 day",
@@ -32,7 +32,7 @@ def sliding_window(name, df, decimal_places=5):
              first("bid").alias("openBid"), last("bid").alias("closeBid"),
              first("ask").alias("openAsk"), last("ask").alias("closeAsk"),
              count("bid").alias("count")) \
-        .select(unix_timestamp("window.start").alias("ts") * 1000, r("openAvg"),
+        .select(unix_timestamp("window.start").alias("ts"), r("openAvg"),
                 r("closeAvg"), r("minAvg"), r("maxAvg"), "count",
                 "symbol") \
         .withColumn("frame", lit(name))
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         .withColumn('timestamp', to_timestamp(col("updated") / 1000)) \
         .withColumn('avg', (col("bid") + col("ask")) / 2)
 
-    res = sliding_window("M1", df)
+    res = sliding_window("m1", df)
     query_1 = res.writeStream \
         .format('console') \
         .start()

@@ -140,6 +140,7 @@ class FXCMCrawler {
             payload.Rates = payload.Rates.map(function (v) {
                 return v
             });
+            console.log('payload', payload)
             this.bus.emit('price_update', payload);
             this.lastUpdate[payload.Symbol] = getUnixSeconds();
         } catch (e) {
