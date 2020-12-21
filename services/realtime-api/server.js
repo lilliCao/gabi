@@ -24,20 +24,23 @@ async function main() {
 
     const onPriceUpdate = (priceUpdate) => {
         const {symbol, ...data} = priceUpdate;
-        //console.log('onPriceUpdate', data)
         store.putPrice(symbol, data);
         rtSocket.publishPrice(symbol, data);
+        data['updated_sec'] = Math.floor(data['updated'] / 1000);
+        data['updated_minstart'] = Math.floor(data['updated'] / 1000 - data['updated'] / 1000 % 60);
+        console.log('onPriceUpdate', data);
     };
 
     const onCandle = (candleUpdate) => {
         const {symbol, frame, ...data} = candleUpdate;
+        console.log("Candle received:", data);
         store.putCandle(symbol, frame, data);
         rtSocket.publishCandle(symbol, frame, data);
     };
 
     const onNews = (newsUpdate) => {
         const {symbol, ...data} = newsUpdate;
-        console.log('receive news', data.title)
+        console.log('receive news', data.title);
         store.putNews(symbol, data);
         rtSocket.publishNews(symbol, data);
     };

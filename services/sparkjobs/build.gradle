@@ -1,0 +1,50 @@
+plugins {
+    id 'idea'
+    id 'java'
+    id 'scala'
+    id 'com.github.johnrengelman.shadow' version '1.2.4'
+    id 'application'
+}
+
+group 'de.haw.dadp'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+mainClassName = 'price.PriceCandlestick'
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+ext {
+    scalaVersion = '2.12.7'
+    sparkVersion = '3.0.1'
+}
+
+dependencies {
+    compile "org.apache.spark:spark-core_2.12:$sparkVersion"
+    compile "org.apache.spark:spark-sql_2.12:$sparkVersion"
+    compile "org.apache.spark:spark-sql-kafka-0-10_2.12:$sparkVersion"
+    compile "org.scala-lang:scala-library:$scalaVersion"
+}
+
+shadowJar {
+    manifest {
+        attributes(
+                'Main-Class': 'price.PriceCandlestick'
+        )
+    }
+    zip64 true
+}
+
+sourceSets {
+    main {
+        scala {
+            srcDirs = ['src/main/scala', 'src/main/java']
+        }
+        java {
+            srcDirs = []
+        }
+    }
+}

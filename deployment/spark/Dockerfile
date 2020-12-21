@@ -30,9 +30,29 @@ RUN apk add --no-cache python3-dev libstdc++ && \
 
 RUN pip3 install --force-reinstall pyspark==3.0.1
 WORKDIR /kafka
+
+RUN wget https://repo1.maven.org/maven2/org/apache/spark/spark-streaming-kafka-0-10-assembly_2.12/3.0.1/spark-streaming-kafka-0-10-assembly_2.12-3.0.1.jar
+RUN mv spark-streaming-kafka-0-10-assembly_2.12-3.0.1.jar /spark/jars
 ENV PYSPARK_SUBMIT_ARGS="--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.1 pyspark-shell"
 
 #Give permission to execute scripts
 # Fix the value of PYTHONHASHSEED
 # Note: this is needed when you use Python 3.3 or greater
 ENV PYTHONHASHSEED 1
+
+ENV SCALA_VERSION=2.12.8 \
+    SCALA_HOME=/usr/share/scala
+
+# NOTE: bash is used by scala/scalac scripts, and it cannot be easily replaced with ash.
+
+RUN apk add --no-cache --virtual=.build-dependencies wget ca-certificates && \
+    apk add --no-cache bash && \
+    cd "/tmp" && \
+    wget "https://downloads.typesafe.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.tgz" && \
+    tar xzf "scala-${SCALA_VERSION}.tgz" && \
+    mkdir "${SCALA_HOME}" && \
+    rm "/tmp/scala-${SCALA_VERSION}/bin/"*.bat && \
+    mv "/tmp/scala-${SCALA_VERSION}/bin" "/tmp/scala-${SCALA_VERSION}/lib" "${SCALA_HOME}" && \
+    ln -s "${SCALA_HOME}/bin/"* "/usr/bin/" && \
+    apk del .build-dependencies && \
+    rm -rf "/tmp/"*

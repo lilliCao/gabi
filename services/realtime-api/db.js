@@ -94,8 +94,10 @@ class Datastore {
         })
     }
 
-    _sanitizeSymbol(symbol) {
-        return symbol.replace(/\W/gi, '').toUpperCase();
+    _sanitizeSymbol(symbol, toUpper = true) {
+        symbol = symbol.replace(/\W/gi, '');
+        if (toUpper) return symbol.toUpperCase();
+        return symbol;
     }
 
     _ensureConnection() {

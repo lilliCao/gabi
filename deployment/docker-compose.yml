@@ -43,6 +43,8 @@ services:
       MASTER: spark://sparkmaster:7077
       SPARK_CONF_DIR: /spark/conf
       SPARK_PUBLIC_DNS: localhost
+    volumes:
+      - ../services/sparkjobs/build/libs/sparkjobs-1.0-SNAPSHOT-all.jar:/app/price.jar
     ports:
       - 8080:8080
       - 7077:7077
@@ -58,11 +60,13 @@ services:
     environment:
       SPARK_HOME: /spark
       SPARK_CONF_DIR: /spark/conf
-      SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 1g
+      SPARK_WORKER_CORES: 4
+      SPARK_WORKER_MEMORY: 2g
       SPARK_WORKER_PORT: 8881
       SPARK_WORKER_WEBUI_PORT: 8081
       SPARK_PUBLIC_DNS: localhost
+    volumes:
+      - ../services/sparkjobs/build/libs/sparkjobs-1.0-SNAPSHOT-all.jar:/app/price.jar
     ports:
       - 8081:8081
     command: /spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://sparkmaster:7077
