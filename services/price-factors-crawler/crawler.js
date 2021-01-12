@@ -80,6 +80,7 @@ class FXCMCrawler {
             this.socket = io(this.baseUrl, {
                 query: querystring.stringify({access_token: this.token}),
                 reconnection: true,
+                secure: true,
                 reconnectionDelay: this.reconnectionDelay,
             });
             Log.info(`Connecting to broker: ${this.baseUrl}`);
@@ -126,6 +127,7 @@ class FXCMCrawler {
         const {data} = response;
         if (!data.response.executed) {
             Log.debug(`Error: The request was not executed by the server: ${data}`);
+            Log.debug("Headers:", this.headers);
             return;
         }
         for (let p of data.pairs) {
@@ -140,7 +142,6 @@ class FXCMCrawler {
             payload.Rates = payload.Rates.map(function (v) {
                 return v
             });
-            console.log('payload', payload)
             this.bus.emit('price_update', payload);
             this.lastUpdate[payload.Symbol] = getUnixSeconds();
         } catch (e) {
@@ -157,6 +158,35 @@ class FXCMCrawler {
         for (let p of Object.keys(this.pairs)) {
             this.pairs[p] = false;
         }
+    }
+
+    async getCandles(offerId, period, params) {
+        console.log('Getting historical candles from market data', offerId, period, params);
+        const query = querystring.stringify(params);
+        const response = await axios.get(`${this.baseUrl}/candles/${offerId}/${period}?` + query, {headers: this.headers});
+        if (response.status !== 200) {
+            console.debug(`An error occured while subscribing: ${response}`);
+            return;
+        }
+        const {data} = response;
+        if (!data.response.executed) {
+            console.debug(`Error: The request was not executed by the server: ${JSON.stringify(data)}`);
+            return;
+        }
+        return data.candles.map(candle => ({
+            openBid: candle[1],
+            closeBid: candle[2],
+            highBid: candle[3],
+            lowBid: candle[4],
+            openAsk: candle[5],
+            closeAsk: candle[6],
+            highAsk: candle[7],
+            lowAsk: candle[8],
+            count: candle[9],
+            ts: candle[0],
+            frame: period,
+            symbol: 'EURUSD',
+        }));
     }
 
 }

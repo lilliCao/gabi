@@ -11,10 +11,10 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 function Dashboard() {
     const layouts = {
         lg: [
-            {i: "0", x: 0, y:0, w:1, h:12},
-            {i: "1", x: 1, y:0, w:19, h:8},
-            {i: "2", x: 1, y:0, w:19, h:4},
-            {i: "3", x: 20, y:0, w:4, h:12},
+            //{i: "0", x: 0, y:0, w:1, h:12},
+            {i: "1", x: 0, y:0, w:19, h:8},
+            {i: "2", x: 0, y:0, w:19, h:4},
+            {i: "3", x: 19, y:0, w:5, h:12},
         ]
     };
     const { height: winHeight, width: winWidth } = useWindowDimensions();
@@ -27,9 +27,6 @@ function Dashboard() {
                               margin={[0,0]}
                               breakpoints={{lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0}}
                               cols={{lg: 24, md: 24, sm: 24, xs: 24, xxs: 24}}>
-            <div key="0">
-                <Sidebar/>
-            </div>
             <div key="1" style={{height: '100%'}}>
                 <RealtimeChart/>
             </div>

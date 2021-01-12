@@ -6,6 +6,7 @@ class Datastore {
         this.dbName = dbName;
         this.db = null;
         this.connected = false;
+        this.ensuredIndicies = {};
 
         this.putPrice = this.putPrice.bind(this);
         this.putCandle = this.putCandle.bind(this);
@@ -14,7 +15,6 @@ class Datastore {
         this.getPrices = this.getPrices.bind(this);
         this.getCandles = this.getCandles.bind(this);
         this.getNews = this.getNews.bind(this);
-
     }
 
     async connect() {
@@ -23,20 +23,25 @@ class Datastore {
         this.connected = true;
     }
 
-    putCandle(symbol, frame, data) {
+    async putCandle(symbol, frame, data) {
         this._ensureConnection();
 
         symbol = this._sanitizeSymbol(symbol);
-        // highBid, lowBid, openBid, closeBid
-        return this.db.collection(`${symbol}_${frame}`)
+        const collection = `${symbol}_${frame}`;
+        await this._ensureIndex(collection, 'ts');
+        //  openBid, closeBid, highBid, lowBid
+        // openAsk, closeAsk, highAsk, lowAsk
+        return await this.db.collection(collection)
             .updateOne({ts: data['ts']}, {$set: data}, {upsert: true})
     }
 
-    putPrice(symbol, data) {
+    async putPrice(symbol, data) {
         this._ensureConnection();
 
         symbol = this._sanitizeSymbol(symbol);
-        return this.db.collection(`${symbol}`)
+        const collection = `${symbol}`;
+        await this._ensureIndex(collection, 'updated');
+        return await this.db.collection(`${symbol}`)
             .updateOne({updated: data['updated']}, {$set: data}, {upsert: true});
     }
 
@@ -52,11 +57,10 @@ class Datastore {
         this._ensureConnection();
 
         symbol = this._sanitizeSymbol(symbol);
-        const collection = `${symbol}_${frame}`;
-        return this._toDocuments(
+        return this._deDuplicate(this._toDocuments(
             this.db.collection(`${symbol}_${frame}`)
-                .find({ts: {$gte: from, $lte: to}}).sort({ts: 1})
-        );
+                .find({ts: {$gte: from, $lte: to}}).project({_id: 0}).sort({ts: 1})
+        ), 'ts');
     }
 
     getPrices(symbol, from, to) {
@@ -82,6 +86,14 @@ class Datastore {
         );
     }
 
+    _ensureIndex(collection, key) {
+        if (!this.ensuredIndicies.hasOwnProperty(collection)) {
+            return this.db.collection(collection).ensureIndex(key).then(() => {
+                this.ensuredIndicies[collection] = true;
+            });
+        }
+    }
+
     _toDocuments(results) {
         return new Promise((resolve, reject) => {
             results.toArray((err, result) => {
@@ -91,6 +103,20 @@ class Datastore {
                     resolve(result);
                 }
             });
+        })
+    }
+
+    _deDuplicate(resultPromise, key) {
+        return resultPromise.then((result) => {
+            const m = {};
+            const distinctVals = [];
+            for (let r of result) {
+                if (!m.hasOwnProperty(r[key])) {
+                    distinctVals.push(r);
+                    m[r[key]] = 1;
+                }
+            }
+            return distinctVals;
         })
     }
 

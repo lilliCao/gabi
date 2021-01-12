@@ -100,11 +100,12 @@ services:
       - gabi
     volumes:
       - ../services/price-factors-crawler:/app
-      - /app/node_modules
     environment:
       - "FXCM_TOKEN=0004ac72171d396154ddaebc87487cf326cfdd1e"
       - "KAFKA_SERVER=kafka:9092"
       - "KAFKA_TOPIC=dad.price.0"
+    ports:
+      - 2999:3000
 
   realtime-api:
     build:
@@ -115,6 +116,7 @@ services:
       - ../services/realtime-api:/app
       - /app/node_modules
     environment:
+      - "FXCM_TOKEN=0004ac72171d396154ddaebc87487cf326cfdd1e"
       - "PORT=3000"
       - "KAFKA_SERVER=kafka:9092"
       - "KAFKA_PRICETOPIC=dad.price.0"

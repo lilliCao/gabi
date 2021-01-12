@@ -18,7 +18,7 @@ app.get('/api/v1/pairs/:pair/candles/:frame', async (req, res) => {
         return;
     }
     if (to == null) {
-        to = new Date().getTime() + 600000;
+        to = Math.floor(new Date().getTime() / 1000 + 60);
     }
     try {
         from = parseInt(from);
@@ -29,7 +29,6 @@ app.get('/api/v1/pairs/:pair/candles/:frame', async (req, res) => {
     }
 
     const data = await app.datastore.getCandles(pair, frame, from, to);
-    console.log("data", data);
     res.json(data);
 });
 
@@ -81,10 +80,6 @@ app.get('/api/v1/pairs/:pair/news', async (req, res) => {
     const data = await app.datastore.getNews(pair, offset, limit);
     res.json(data);
 });
-
-
-
-
 
 
 module.exports = app;

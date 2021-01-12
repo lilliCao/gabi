@@ -59,7 +59,7 @@ function NewsFeed() {
                 return {
                     id: item._id,
                     title: item.title,
-                    content: item.text.substr(0, 200),
+                    content: item.summary.substr(0, 200),
                     link: item.url,
                     source: item.source,
                     created_at: item.time * 1000

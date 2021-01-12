@@ -7,6 +7,9 @@ export default {
             backgroundColor: '#253248',
             textColor: 'rgba(255, 255, 255, 0.9)',
         },
+        localization: {
+            priceFormatter: (v) => parseFloat(v).toFixed(5),
+        },
         grid: {
             vertLines: {
                 color: '#334158',
@@ -32,7 +35,7 @@ export default {
         lineWidth: 2,
         crossHairMarkerVisible: false,
     },
-    candlestick:{
+    candlestick: {
         upColor: '#4bffb5',
         downColor: '#ff4976',
         borderDownColor: '#ff4976',

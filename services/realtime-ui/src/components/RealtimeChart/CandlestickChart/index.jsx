@@ -1,28 +1,28 @@
-import React, {useEffect, useImperativeHandle, useRef, useState} from 'react';
+import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from 'react';
 import BaseChart from "../BaseChart";
 import {createChart} from "lightweight-charts";
 import config from "../config";
+import {calculateNewCandle} from "../utils";
 
-function CandlestickChart({candlesChartRef}) {
+const CandlestickChart = forwardRef((props, ref) => {
     const chartContainerRef = useRef();
     const chart = useRef();
-    const [candleSeries, setCandleSeries] = useState();
-
-    useImperativeHandle(candlesChartRef, () => ({
+    const [candleSeries, setCandleSeries] = useState([]);
+    const [currCandle, setCurrCandle] = useState();
+    useImperativeHandle(ref, () => ({
         update(data) {
-            candleSeries.update({
-                time: data.time,
-                open: data.open,
-                high: data.high,
-                low: data.low,
-                close: data.close
-            })
+            console.log("update", data);
+            if (!currCandle) return;
+            candleSeries.update(data);
+            setCurrCandle(data)
         },
         setData(data) {
-            candleSeries.setData(data)
+            candleSeries.setData(data);
+            setCurrCandle(data[data.length - 1]);
         },
-        changeInterval(interval) {
-
+        reset() {
+            candleSeries.setData([]);
+            setCurrCandle({});
         }
     }));
 
@@ -48,7 +48,6 @@ function CandlestickChart({candlesChartRef}) {
         const candlestickSeries = chart.current.addCandlestickSeries({
             ...config.candlestick
         });
-
         candlestickSeries.setData([]);
         setCandleSeries(candlestickSeries);
     }, []);
@@ -58,6 +57,6 @@ function CandlestickChart({candlesChartRef}) {
             EUR/USD - M1
         </BaseChart>
     )
-}
+});
 
 export default CandlestickChart;

@@ -1,22 +1,26 @@
+import dateutil.parser
 import json
-from datetime import timezone, datetime
-import w3lib.html
-import scrapy
-from kafka import KafkaProducer
 import os
+import re
+import scrapy
+import w3lib.html
+from datetime import timezone, datetime
+from kafka import KafkaProducer
 from scrapy.crawler import CrawlerRunner
 from twisted.internet import reactor
-import re
 
 topic = os.environ['TOPIC']
 kafka = os.environ['KAFKA']
-pages = int(os.environ['PAGES'])
-schedule = int(os.environ['SCHEDULE'])
+pages = 10
+schedule = 10
 symbol = 'EUR/USD'
+SEP = '\n'
 
+print("Connecting to", topic, kafka)
 producer = KafkaProducer(bootstrap_servers=[kafka],
                          value_serializer=lambda x:
                          json.dumps(x).encode('utf-8'))
+print("Connected to", topic, kafka)
 
 
 class NewsSpider(scrapy.Spider):
@@ -28,6 +32,8 @@ class NewsSpider(scrapy.Spider):
     for i in range(pages):
         start_urls.append('https://www.dailyfx.com/market-news/articles/{}'.format(i + 1))
 
+    #
+    #
     def get_text_of_the_article(self, response):
         """
         Get actual news text and send to kafka
@@ -36,34 +42,35 @@ class NewsSpider(scrapy.Spider):
         """
         item = response.request.meta['item']
 
-        content = response.xpath('//div[@class="dfx-articleBody__content"]').extract()[0]
+        contentDom = response.css('.dfx-articleBody__content')[0]
+        summary = [clean(li.extract()) for li in contentDom.css('ul.gsstx')[0].css('li')]
+        content = []
+        for p in contentDom.css('p.gsstx'):
+            styles = p.xpath("@style").extract()
+            style = '' if len(styles) == 0 else styles[0]
+            # ignore chart titles, sources
+            if 'bold' in style or 'italic' in style:
+                continue
+            content.append(clean(p.extract()))
 
-        advertisement = response.xpath(
-            '//div[@class="dfx-articleBody__content"]//*[contains(@class,"dfx-ad")]'
-        ).extract()[0]
+        articleTimeDom = response.css('.dfx-articleHead__displayDate')[0]
+        articleTime = dateutil.parser.parse(articleTimeDom.xpath("@data-time").extract()[0])
 
-        # TODO: remove banner does not work
-        banner = response.xpath(
-            '//div[@class="dfx-articleBody__content"]//*[contains(@class,"dfx-inHouseGuideBannerComponent")]'
-        ).extract()[0]
+        news_obj = {
+            'title': item['title'],
+            'url': item['url'],
+            'time': articleTime.timestamp(),
+            'summary': SEP.join(summary),
+            'content': SEP.join(content),
+            'symbol': 'EURUSD',
+            'source': 'DailyFX',
+        }
 
-        content = content.replace(advertisement, "")
-        content = content.replace(banner, "")
+        if False:
+            print_news(news_obj)
 
-
-        if symbol.replace('/', '') in content or symbol in content:
-            print("found", item['title'])
-            text = w3lib.html.remove_tags(content, keep=('h2','li'))
-            text = w3lib.html.replace_tags(text, token='\n').strip()
-
-            # TODO: change  multiple lines to one line does not work
-            text = re.sub(r'\n+', '\n',text)
-            # TODO: change  multiple spaces to one space does not work
-            text =re.sub(r'\s+', '\s',text)
-            item['text'] = text
-#
-#             print('Publishing to kafka.....Time....{} Title ..... {}'.format(item['time'], item['title']))
-#             producer.send(topic, item)
+        producer.send(topic, news_obj)
+        print('Publishing to kafka.....Time....{} Title ..... {}'.format(item['time'], item['title']))
 
     def parse(self, response):
         """
@@ -71,7 +78,7 @@ class NewsSpider(scrapy.Spider):
         :param response:
         :return:
         """
-        print('Crawling these pages {} at timestamp {}'.format(self.start_urls, datetime.now()))
+        # print('Crawling these pages {} at timestamp {}'.format(self.start_urls, datetime.now()))
         list_element = response.css('div.dfx-articleList')
         articles = list_element.css("a")
         news = []
@@ -97,10 +104,10 @@ class NewsSpider(scrapy.Spider):
         news = sorted(news, key=lambda x: x['time'], reverse=True)
         print('Receiving {} articles Sample {}'.format(len(news), news[0]))
         for item in news:
-            #if NewsSpider.last_crawl is None or NewsSpider.crawl_page < pages:
+            # if NewsSpider.last_crawl is None or NewsSpider.crawl_page < pages:
             #    print('This is the first crawling. Last crawl is {} or number of pages have been crawled {}'
             #          .format(NewsSpider.last_crawl, NewsSpider.crawl_page))
-            #elif item['time'] < NewsSpider.last_crawl:
+            # elif item['time'] < NewsSpider.last_crawl:
             #    print('These news have already read the last time, skip all. Aborting crawling')
             #    break
             yield scrapy.Request(url=item['url'], callback=self.get_text_of_the_article, meta={'item': item})
@@ -109,9 +116,32 @@ class NewsSpider(scrapy.Spider):
         print('Updating last crawler to {}'.format(NewsSpider.last_crawl))
 
 
+def print_news(news):
+    print("==========================================================")
+    print()
+    print("Title:", news['title'].upper())
+    print("URL:", news['url'])
+    print("Time:", news['time'])
+    print("Timestamp:", news['time'].timestamp())
+    print()
+    print("Summary:", "\n" + '\n'.join(news['summary'].split(SEP)))
+    print()
+    for c in news['content'].split(SEP):
+        print(c)
+    print()
+    print("==========================================================")
+
+
+def clean(htmltext, requireEnd=True):
+    t = w3lib.html.replace_entities(w3lib.html.remove_tags(htmltext))
+    if requireEnd and re.match('[\d\w]', t[-1]):
+        t += '.'
+    return t
+
+
 def crawl_job():
     """
-    Job to start spiders.
+    Job to startBackgroundImport spiders.
     Return Deferred, which will execute after crawl has completed.
     """
     runner = CrawlerRunner()
@@ -137,5 +167,6 @@ def crawl():
 
 
 if __name__ == "__main__":
+    print("Start")
     crawl()
     reactor.run()

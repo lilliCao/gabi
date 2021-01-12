@@ -14,19 +14,19 @@ class RealtimeSocket {
         this.lastPrices = {};
     }
 
-    startListening() {
+    startListening(port) {
         this.io.on('connection', (socket) => {
             console.log(socket.id, "connected");
             socket.on('subscribe', (room) => {
                 this._subscribe(socket, room);
             });
         });
-        this.server.listen(3000);
+        this.server.listen(port);
     }
 
     publishCandle(symbol, frame, data) {
         symbol = this._sanitizeSymbol(symbol);
-        frame = this._sanitizeSymbol(frame);
+        frame = this._sanitizeSymbol(frame, false);
         this.io.in(`${symbol}_${frame}`).emit("candle", data);
     }
 
@@ -41,16 +41,21 @@ class RealtimeSocket {
         this.io.in(`${symbol}`).emit("news", data);
     }
 
-    _sanitizeSymbol(symbol) {
-        return symbol.replace(/\W/gi, '').toUpperCase();
+    _sanitizeSymbol(symbol, toUpper = true) {
+        symbol = symbol.replace(/\W/gi, '');
+        if (toUpper) {
+            return symbol.toUpperCase()
+        }
+        return symbol;
     }
 
     _subscribe(socket, room) {
         if (!this._isRoomValid(room)) {
             return;
         }
+        room = this._sanitizeSymbol(room, false);
         console.log(socket.id, "joined", room);
-        socket.join(room.toUpperCase());
+        socket.join(room);
         socket.emit('price', this.lastPrices[room]);
         console.log("Send to", socket.id, this.lastPrices[room])
     }

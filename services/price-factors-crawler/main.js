@@ -3,6 +3,9 @@ const GlobalBus = new EventEmitter();
 const kafka = require('kafka-node');
 const FXCMCrawler = require('./crawler');
 const Log = require('./logger');
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
 
 async function main() {
     const crawler = new FXCMCrawler({
@@ -14,12 +17,21 @@ async function main() {
     const producer = new kafka.Producer(new kafka.KafkaClient({kafkaHost: process.env.KAFKA_SERVER || 'kafka:9092'}));
     producer.on('ready', startMsgForwarding(producer));
 
-    // test only
-    //setInterval(function () {
-     //   GlobalBus.emit('price_update', {Symbol: 'EUR/USD', Rates: [1, 2, 3]})
-    //}, 1000);
-
     crawler.start();
+    const app = express();
+    app.use(cors());
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({extended: false}));
+    app.get('/candles', async (req, res) => {
+        const {offerId, period, ...params} = req.query;
+        try {
+            const data = await crawler.getCandles(offerId, period, params);
+            res.json(data);
+        } catch (e) {
+            res.json({err: `${e}`});
+        }
+    });
+    app.listen(3000);
 }
 
 function startMsgForwarding(producer,) {

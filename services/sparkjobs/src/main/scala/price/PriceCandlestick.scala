@@ -22,6 +22,7 @@ object PriceCandlestick {
       .appName("PriceCandlestick")
       .master(master)
       .config("spark.sql.shuffle.partitions", "1")
+      .config("spark.executor.cores", "1")
       .getOrCreate()
 
     val frameName = spark.conf.get("spark.executorEnv.price.frameName", "m1")
@@ -65,15 +66,15 @@ object PriceCandlestick {
 
     df.withWatermark("timestamp", "0 second")
       .groupBy(window(col("timestamp"), interval), col("symbol"))
-      .agg(min("bid").alias("minBid"), max("bid").alias("maxBid"),
-        min("ask").alias("minAsk"), max("ask").alias("maxAsk"),
+      .agg(min("bid").alias("lowBid"), max("bid").alias("highBid"),
+        min("ask").alias("lowAsk"), max("ask").alias("highAsk"),
         first("bid").alias("openBid"), last("bid").alias("closeBid"),
         first("ask").alias("openAsk"), last("ask").alias("closeAsk"),
         count("bid").alias("count"))
       .select(
         unix_timestamp(col("window.start")).alias("ts"),
-        r("openBid"), r("closeBid"), r("minBid"), r("maxBid"),
-        r("openAsk"), r("closeAsk"), r("minAsk"), r("maxAsk"), col("count"), col("symbol"))
+        r("openBid"), r("closeBid"), r("lowBid"), r("highBid"),
+        r("openAsk"), r("closeAsk"), r("lowAsk"), r("highAsk"), col("count"), col("symbol"))
       .withColumn("frame", lit(fr))
   }
 }

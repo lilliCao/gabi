@@ -54,49 +54,50 @@ class CandlesImporter {
     async _onConnectedFXCM() {
         this.isConnecting = false;
         this.headers['Authorization'] = `Bearer ${this.socket.id}${this.token}`;
-        const now = Math.round(Date.now() / 1000)
+        const now = Math.round(Date.now() / 1000);
         const candleScenes = [];
 
         // 1 minute for 3 years
+        const years = 20;
         let num = 10000;
-        for (let i = 0; i < 60 * 24 * 365 * 3; i += num) {
+        for (let i = 0; i < 60 * 24 * 365 * years; i += num) {
             const to = now - i * 60;
             // const from = to - 10000 * 60;
             candleScenes.push({offerId: 1, periodId: 'm1', num, to})
         }
 
         // 30 minutes for 3 years
-        num = 8760
-        for (let i = 0; i < 2 * 24 * 365 * 3; i += num) {
+        num = 8760;
+        for (let i = 0; i < 2 * 24 * 365 * years; i += num) {
             const to = now - i * 30 * 60;
             // const from = to - 10000 * 60 * 30;
             candleScenes.push({offerId: 1, periodId: 'm30', num, to})
         }
 
         // 1 hour in year
-        num = 8760
-        for (let i = 0; i < 24 * 365 * 3; i += num) {
+        num = 8760;
+        for (let i = 0; i < 24 * 365 * years; i += num) {
             const to = now - i * 60 * 60;
             // const from = to - 10000 * 60 * 60;
             candleScenes.push({offerId: 1, periodId: 'H1', num, to})
         }
 
         // 4 hour in year
-        num = 2190
-        for (let i = 0; i < 6 * 365 * 3; i += num) {
+        num = 2190;
+        for (let i = 0; i < 6 * 365 * years; i += num) {
             const to = now - 60 * 60 * 4 * i;
             candleScenes.push({offerId: 1, periodId: 'H4', num, to})
         }
 
         // 1 day in year
-        num = 365
-        for (let i = 0; i < 3 * 365; i += 365) {
+        num = 365;
+        for (let i = 0; i < years * 365; i += 365) {
             const to = now - 60 * 60 * 24 * i;
             candleScenes.push({offerId: 1, periodId: 'D1', num, to})
         }
 
         for (let candleScene of candleScenes) {
-            await this._getCandles(candleScene.offerId, candleScene.periodId, candleScene.num, candleScene.to);
+            await this._getCandles(candleScene.offerId, candleScene.periodId, candleScene.num, candleScene.to).;
         }
         process.exit(0);
     }
@@ -118,7 +119,7 @@ class CandlesImporter {
             });
             console.log(`Connecting to broker: ${this.baseUrl}`);
             this.socket.on('connect', async () => {
-                console.log("Connected to broker");
+                console.log("Connected to broker", this.socket);
                 console.debug(`Socket.IO session has been opened: ${this.socket.id}`);
                 await this._onConnectedFXCM();
                 resolve();
@@ -163,14 +164,19 @@ class CandlesImporter {
     _handleResponse(candles, periodId) {
         const convertedCandles = candles.map(candle => {
             return {
-                _id: candle[0],
                 openBid: candle[1],
                 closeBid: candle[2],
                 highBid: candle[3],
                 lowBid: candle[4],
-                ts: candle[0]
+                openAsk: candle[5],
+                closeAsk: candle[6],
+                highAsk: candle[7],
+                lowAsk: candle[8],
+                count: candle[9],
+                ts: candle[0],
+                symbol: 'EURUSD',
             }
-        })
+        });
 
         // offer_id: 1 currency: EUR/USD
         return this._putCandleToDb("EUR/USD", periodId, convertedCandles);
@@ -178,8 +184,8 @@ class CandlesImporter {
 
     _putCandleToDb(symbol, frame, data) {
         symbol = this._sanitizeSymbol(symbol);
-        console.log('Importing data to collection', `${symbol}_${frame}`, data.length)
-        return this.db.collection(`${symbol}_${frame}`).insertMany(data, {
+        console.log('Importing data to collection', `${symbol}_${frame}`, data.length);
+        return this.db.collection(`import_${symbol}_${frame}`).insertMany(data, {
             writeConcern: {w: 1, j: true},
             ordered: false
         }).catch(e => {

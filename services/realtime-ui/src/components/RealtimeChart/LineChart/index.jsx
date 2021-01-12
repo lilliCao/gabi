@@ -1,26 +1,26 @@
-import React, {useEffect, useImperativeHandle, useRef, useState} from 'react';
+import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from 'react';
 import {createChart} from 'lightweight-charts';
 import BaseChart from "../BaseChart";
 import config from "../config";
 import moment from "moment";
 
 
-function LineChart({lineChartRef}) {
+const LineChart = forwardRef((props, ref) => {
     const chartContainerRef = useRef();
-    const [areaSeries, setAreaSeries] = useState()
+    const [areaSeries, setAreaSeries] = useState([]);
     const chart = useRef();
 
-    useImperativeHandle(lineChartRef, () => ({
+    useImperativeHandle(ref, () => ({
         update(price) {
             areaSeries.update({
                 time: price.time,
-                value: price.value
+                value: price.close
             })
         },
         setData(data) {
-            areaSeries.setData(data)
+            areaSeries.setData(data.map(d => ({time: d.time, value: d.close})));
         },
-        changeInterval(interval) {
+        reset() {
 
         }
     }));
@@ -60,6 +60,6 @@ function LineChart({lineChartRef}) {
         </BaseChart>
 
     );
-}
+});
 
 export default LineChart;

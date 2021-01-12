@@ -24,9 +24,8 @@ class KafkaConsumer {
         }
         this.priceTransform = (json) => {
             const priceKeys = [
-                'bid', 'minBid', 'maxBid', 'openBid', 'closeBid',
-                'ask', 'minAsk', 'maxAsk', 'openAsk', 'closeAsk',
-                'avg', 'minAvg', 'maxAvg', 'openAvg', 'closeAvg',
+                'bid', 'lowBid', 'highBid', 'openBid', 'closeBid',
+                'ask', 'lowAsk', 'highAsk', 'openAsk', 'closeAsk',
                 'high', 'low',
             ];
             for (let k of Object.keys(json)) {
