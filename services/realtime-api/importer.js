@@ -27,9 +27,9 @@ class CandleImporter {
     }
 
 
-    async start() {
+    async start(fromTime) {
         await this._connectDB();
-        const now = Math.round(new Date().getTime() / 1000);
+        const now = fromTime;
         const startTs = now - 60 * 60 * 24;
         if (this.onConnected) {
             this.onConnected();
@@ -38,7 +38,7 @@ class CandleImporter {
         const candleScenes = [];
 
         // 1 minute for 3 years
-        let num = 1000;
+        let num = 10000;
         for (let i = 0; i < 60 * 24 * 365 * 3; i += num) {
             const to = now - i * 60;
             const from = Math.max(now - i - num, 0);
@@ -46,36 +46,23 @@ class CandleImporter {
             candleScenes.push({offerId: 1, periodId: 'm1', num, to});
             if (from <= startTs) break;
         }
-        /*
-                // 30 minutes for 3 years
-                num = 8760;
-                for (let i = 0; i < 2 * 24 * 365 * 3; i += num) {
-                    const to = now - i * 30 * 60;
-                    // const from = to - 10000 * 60 * 30;
-                    candleScenes.push({offerId: 1, periodId: 'm30', num, to})
-                }
 
-                // 1 hour in year
-                num = 8760;
-                for (let i = 0; i < 24 * 365 * 3; i += num) {
-                    const to = now - i * 60 * 60;
-                    // const from = to - 10000 * 60 * 60;
-                    candleScenes.push({offerId: 1, periodId: 'H1', num, to})
-                }
+        // 30 minutes for 3 years
+        num = 8760;
+        for (let i = 0; i < 2 * 24 * 365 * 3; i += num) {
+            const to = now - i * 30 * 60;
+            // const from = to - 10000 * 60 * 30;
+            candleScenes.push({offerId: 1, periodId: 'm30', num, to})
+        }
 
-                // 4 hour in year
-                num = 2190;
-                for (let i = 0; i < 6 * 365 * 3; i += num) {
-                    const to = now - 60 * 60 * 4 * i;
-                    candleScenes.push({offerId: 1, periodId: 'H4', num, to})
-                }
+        // 1 hour in year
+        num = 8760;
+        for (let i = 0; i < 24 * 365 * 3; i += num) {
+            const to = now - i * 60 * 60;
+            // const from = to - 10000 * 60 * 60;
+            candleScenes.push({offerId: 1, periodId: 'H1', num, to})
+        }
 
-                // 1 day in year
-                num = 365;
-                for (let i = 0; i < 3 * 365; i += 365) {
-                    const to = now - 60 * 60 * 24 * i;
-                    candleScenes.push({offerId: 1, periodId: 'D1', num, to})
-                }*/
 
         for (let candleScene of candleScenes) {
             const candles = await this.getCandles(candleScene.offerId, candleScene.periodId, {
@@ -83,7 +70,7 @@ class CandleImporter {
                 to: candleScene.to,
                 from: candleScene.from,
             });
-            await this._putCandleToDb("EUR/USD", candleScene.periodId, candles);
+            await this._putCandleToDb("EURUSD", candleScene.periodId, candles);
         }
     }
 
@@ -100,13 +87,27 @@ class CandleImporter {
             console.debug(`An error occured:`, response.error);
             return;
         }
-        console.log("Response:", response.data);
+        //console.log("Response:", response.data);
         return response.data;
     }
 
     async _putCandleToDb(symbol, frame, data) {
         symbol = this._sanitizeSymbol(symbol);
         console.log('Importing data to collection', `${symbol}_${frame}`, data.length);
+        const priceTransform = (json) => {
+            const priceKeys = [
+                'bid', 'lowBid', 'highBid', 'openBid', 'closeBid',
+                'ask', 'lowAsk', 'highAsk', 'openAsk', 'closeAsk',
+                'high', 'low',
+            ];
+            for (let k of Object.keys(json)) {
+                if (priceKeys.indexOf(k) > -1) {
+                    json[k] = json[k].toFixed(5);
+                }
+            }
+            return json
+        };
+        data = data.map(priceTransform);
         await this.db.collection(`${symbol}_${frame}`).ensureIndex('ts');
         return this.db.collection(`${symbol}_${frame}`).insertMany(data, {
             writeConcern: {w: 1, j: true},

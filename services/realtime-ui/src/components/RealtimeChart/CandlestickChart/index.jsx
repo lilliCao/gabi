@@ -2,8 +2,7 @@ import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} fro
 import BaseChart from "../BaseChart";
 import {createChart} from "lightweight-charts";
 import config from "../config";
-import {calculateNewCandle} from "../utils";
-
+import moment from 'moment'
 const CandlestickChart = forwardRef((props, ref) => {
     const chartContainerRef = useRef();
     const chart = useRef();
@@ -34,12 +33,12 @@ const CandlestickChart = forwardRef((props, ref) => {
                 // timeVisible: true,
                 // secondsVisible: false,
 
-                // tickMarkFormatter: (time) => {
-                //     // console.log('time', time)
-                //     //     //const date = new Date(time.year, time.month, time.day);
-                //     //     //return date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate();
-                //     return moment(time).utc().format("HH:mm:ss")
-                // },
+                tickMarkFormatter: (time) => {
+                    //     // console.log('time', time)
+                    //     //     //const date = new Date(time.year, time.month, time.day);
+                    //     //     //return date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate();
+                    return moment(time*1000).utc().format("HH:mm")
+                },
                 borderColor: '#485c7b',
             },
             ...config.general,

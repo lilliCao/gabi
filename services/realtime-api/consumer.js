@@ -12,6 +12,7 @@ class KafkaConsumer {
             {topic: candleTopic, partition: 0},
             {topic: priceTopic, partition: 0},
             {topic: newsTopic, partition: 0},
+            {topic: 'dad.livecandle.0', partition: 0},
         ], {
             autoCommit: true
         });
@@ -38,7 +39,7 @@ class KafkaConsumer {
     }
 
 
-    startConsuming(onPriceUpdate, onCandle, onNews) {
+    startConsuming(onPriceUpdate, onCandle, onNews, onLiveCandle) {
         this.consumer.on('message', (message) => {
             if (message.topic === this.candleTopic) {
                 onCandle(this.priceTransform(this.deserializer(message.value)));
@@ -46,6 +47,8 @@ class KafkaConsumer {
                 onPriceUpdate(this.priceTransform(this.deserializer(message.value)));
             } else if (message.topic === this.newsTopic) {
                 onNews(this.deserializer(message.value))
+            } else if (message.topic === 'dad.livecandle.0') {
+                onLiveCandle(this.priceTransform(this.deserializer(message.value)));
             }
         });
     }

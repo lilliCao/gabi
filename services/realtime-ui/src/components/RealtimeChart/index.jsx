@@ -35,9 +35,17 @@ function RealtimeChart() {
     };
 
     useEffect(() => {
-        socket.on('price', updateCandleHandler.bind(this));
+        socket.on('livecandle', candle => {
+            setCurrentCandle({
+                time: candle.ts,
+                open: candle.openBid,
+                high: candle.highBid,
+                low: candle.lowBid,
+                close: candle.closeBid,
+            });
+        });
         socket.emit('subscribe', 'EURUSD_m1');
-        socket.emit('subscribe', 'EURUSD');
+        //socket.emit('subscribe', 'EURUSD');
         socket.on('candle', item => {
             console.log("Candle update", item);
             if (item.ts <= currentCandle.time) return;
@@ -49,7 +57,7 @@ function RealtimeChart() {
                 close: item.closeBid,
             });
         });
-        const from = Math.round((new Date().getTime() - 60000 * 60 * 3) / 1000);
+        const from = Math.round((new Date().getTime() - 60000 * 60 * 100) / 1000);
         getHistoricalCandles('EURUSD', 'm1', from).then(res => {
             const data = res.map(item => {
                 return {

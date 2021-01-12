@@ -1,7 +1,7 @@
 function calculateNewCandle(lastCandle, updateData, frameInSec) {
     console.log("udpatedata", updateData, lastCandle);
     const sec = Math.floor((updateData.updated / 1000));
-    const endTime = sec - sec % frameInSec;// + frameInSec;
+    const endTime = sec - (sec % frameInSec) + frameInSec;
     const val = updateData.bid;
     const retval = {...lastCandle};
     retval.time = endTime;
@@ -13,6 +13,7 @@ function calculateNewCandle(lastCandle, updateData, frameInSec) {
     }
     retval.close = val;
     if (endTime > lastCandle.time) {
+        console.log("end", endTime, "last", lastCandle.time);
         return lastCandle;
     }
     return retval;
