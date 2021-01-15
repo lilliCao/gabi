@@ -28,7 +28,9 @@ services:
           dad.candle.0:1:1,\
           dad.market_factor.0:1:1,\
           dad.news.0:1:1,\
-          dad.tweet.0:1:1"
+          dad.tweet.0:1:1, \
+          dad.livecandle.0:1:1, \
+          dad.predictioncandle.0:1:1"
     depends_on:
       - zookeeper
 
@@ -89,6 +91,7 @@ services:
       - gabi
     volumes:
       - ../services/price-factors-crawler:/app
+      - /app/node_modules
     environment:
       - "FXCM_TOKEN=0004ac72171d396154ddaebc87487cf326cfdd1e"
       - "KAFKA_SERVER=kafka:9092"
@@ -139,6 +142,18 @@ services:
       - SCHEDULE=10
       - PAGES=5
       - "KAFKA=kafka:9092"
+
+  flask-ml:
+    build:
+      context: ../services/flask-ml
+    container_name: flask-ml
+    networks:
+      - gabi
+    restart: on-failure
+    volumes:
+      - ../services/flask-ml:/app
+    ports:
+      - 5000:5000
 
   viewer:
     build:

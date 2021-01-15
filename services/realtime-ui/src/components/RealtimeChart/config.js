@@ -43,4 +43,8 @@ export default {
         wickDownColor: '#838ca1',
         wickUpColor: '#838ca1',
     },
+    prediction: {
+        color: 'rgba(4,111,232,1)',
+        lineWidth: 2,
+    }
 }

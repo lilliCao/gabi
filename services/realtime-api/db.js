@@ -35,6 +35,19 @@ class Datastore {
             .updateOne({ts: data['ts']}, {$set: data}, {upsert: true})
     }
 
+    async putPrediction(symbol, frame, data) {
+        this._ensureConnection();
+
+        symbol = this._sanitizeSymbol(symbol);
+        const collection = `${symbol}_${frame}_predict`;
+        await this._ensureIndex(collection, 'ts');
+        //  openBid, closeBid, highBid, lowBid
+        // openAsk, closeAsk, highAsk, lowAsk
+        return await this.db.collection(collection)
+            .updateOne({ts: data['ts']}, {$set: data}, {upsert: true})
+    }
+
+
     async putPrice(symbol, data) {
         this._ensureConnection();
 
@@ -59,6 +72,15 @@ class Datastore {
         symbol = this._sanitizeSymbol(symbol);
         return this._deDuplicate(this._toDocuments(
             this.db.collection(`${symbol}_${frame}`)
+                .find({ts: {$gte: from, $lte: to}}).project({_id: 0}).sort({ts: 1})
+        ), 'ts');
+    }
+
+    getPredictions(symbol, frame, from, to) {
+        this._ensureConnection();
+        symbol = this._sanitizeSymbol(symbol);
+        return this._deDuplicate(this._toDocuments(
+            this.db.collection(`${symbol}_${frame}_predict`)
                 .find({ts: {$gte: from, $lte: to}}).project({_id: 0}).sort({ts: 1})
         ), 'ts');
     }

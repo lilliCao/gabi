@@ -5,6 +5,7 @@ import RealtimeChart from "../../components/RealtimeChart";
 import useWindowDimensions from "../../hooks/useWindowDimensions";
 import Sidebar from "../../components/Sidebar";
 import NewsFeed from "../../components/NewsFeed";
+import SystemMessagePanel from "../../components/SystemMessagePanel";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -30,7 +31,9 @@ function Dashboard() {
             <div key="1" style={{height: '100%'}}>
                 <RealtimeChart/>
             </div>
-            <div key="2" style={{backgroundColor:"#333", color:'#fff'}}>System messages...</div>
+            <div key="2" style={{backgroundColor:"#333", color:'#fff', overflow: 'scroll'}}>
+                <SystemMessagePanel/>
+            </div>
             <div key="3">
                 <NewsFeed/>
             </div>

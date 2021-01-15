@@ -8,10 +8,12 @@ import moment from "moment";
 const LineChart = forwardRef((props, ref) => {
     const chartContainerRef = useRef();
     const [areaSeries, setAreaSeries] = useState([]);
+    const [predictionSeries, setPredictionSeries] = useState([]);
+
     const chart = useRef();
 
     useImperativeHandle(ref, () => ({
-        update(price) {
+        updateData(price) {
             areaSeries.update({
                 time: price.time,
                 value: price.close
@@ -19,6 +21,12 @@ const LineChart = forwardRef((props, ref) => {
         },
         setData(data) {
             areaSeries.setData(data.map(d => ({time: d.time, value: d.close})));
+        },
+        updatePrediction(data) {
+            predictionSeries.update(data);
+        },
+        setPrediction(data) {
+            predictionSeries.setData(data);
         },
         reset() {
 
@@ -37,7 +45,9 @@ const LineChart = forwardRef((props, ref) => {
                     // console.log('time', time)
                     //     //const date = new Date(time.year, time.month, time.day);
                     //     //return date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate();
-                    return moment(time).utc().format("HH:mm:ss")
+//                    return moment(time).utc().format("HH:mm:ss")
+                    return `${time}`
+
                 },
                 borderColor: '#485c7b',
             },
@@ -48,8 +58,15 @@ const LineChart = forwardRef((props, ref) => {
             ...config.area
         });
 
+        const predictionSeries = chart.current.addLineSeries({
+            ...config.prediction
+        });
+
         areaSeries.setData([]);
         setAreaSeries(areaSeries);
+
+        predictionSeries.setData([]);
+        setPredictionSeries(predictionSeries);
 
     }, []);
 

@@ -3,14 +3,17 @@ import BaseChart from "../BaseChart";
 import {createChart} from "lightweight-charts";
 import config from "../config";
 import moment from 'moment'
+
 const CandlestickChart = forwardRef((props, ref) => {
     const chartContainerRef = useRef();
     const chart = useRef();
     const [candleSeries, setCandleSeries] = useState([]);
+    const [predictionSeries, setPredictionSeries] = useState([]);
     const [currCandle, setCurrCandle] = useState();
+
+
     useImperativeHandle(ref, () => ({
-        update(data) {
-            console.log("update", data);
+        updateData(data) {
             if (!currCandle) return;
             candleSeries.update(data);
             setCurrCandle(data)
@@ -19,8 +22,15 @@ const CandlestickChart = forwardRef((props, ref) => {
             candleSeries.setData(data);
             setCurrCandle(data[data.length - 1]);
         },
+        updatePrediction(data) {
+            predictionSeries.update(data);
+        },
+        setPrediction(data) {
+            predictionSeries.setData(data);
+        },
         reset() {
             candleSeries.setData([]);
+            predictionSeries.setData([]);
             setCurrCandle({});
         }
     }));
@@ -37,16 +47,24 @@ const CandlestickChart = forwardRef((props, ref) => {
                     //     // console.log('time', time)
                     //     //     //const date = new Date(time.year, time.month, time.day);
                     //     //     //return date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate();
-                    return moment(time*1000).utc().format("HH:mm")
+                    return moment(time * 1000).utc().format("HH:mm")
                 },
                 borderColor: '#485c7b',
             },
             ...config.general,
         });
 
+        const predictionSeries = chart.current.addLineSeries({
+            ...config.prediction
+        });
+
+        predictionSeries.setData([]);
+        setPredictionSeries(predictionSeries);
+
         const candlestickSeries = chart.current.addCandlestickSeries({
             ...config.candlestick
         });
+
         candlestickSeries.setData([]);
         setCandleSeries(candlestickSeries);
     }, []);

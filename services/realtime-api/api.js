@@ -8,6 +8,30 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
+app.get('/api/v1/pairs/:pair/forecast/:frame', async (req, res) => {
+    const {pair, frame} = req.params;
+    let {from, to} = req.query;
+    if (from == null) {
+        res.status(400).json({
+            err: 'a time window must be provided'
+        });
+        return;
+    }
+    if (to == null) {
+        to = Math.floor(new Date().getTime() / 1000 + 60);
+    }
+    try {
+        from = parseInt(from);
+        to = parseInt(to);
+    } catch (e) {
+        res.status(400).json({err: 'invalid time window', e: `${e}`});
+        return;
+    }
+
+    const data = await app.datastore.getPredictions(pair, frame, from, to);
+    res.json(data);
+});
+
 app.get('/api/v1/pairs/:pair/candles/:frame', async (req, res) => {
     const {pair, frame} = req.params;
     let {from, to} = req.query;

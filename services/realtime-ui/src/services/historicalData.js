@@ -8,8 +8,16 @@ const getHistoricalPrices = (currency, from, to) => {
     return fetch(url).then(res => res.json())
 }
 
-const getHistoricalCandles = (currency, interval, from, to) => {
-    let url = `${API_URL}${API_PREFIX}/pairs/${currency}/candles/${interval}?from=${from}`;
+const getHistoricalCandles = (currency, frame, from, to) => {
+    let url = `${API_URL}${API_PREFIX}/pairs/${currency}/candles/${frame}?from=${from}`;
+    if (to != null) {
+        url += `&to=${to};`
+    }
+    return fetch(url).then(res => res.json())
+}
+
+const getPredictionPrice = (currency, frame, from, to) => {
+    let url = `${API_URL}${API_PREFIX}/pairs/${currency}/forecast/${frame}?from=${from}`;
     if (to != null) {
         url += `&to=${to};`
     }
@@ -31,5 +39,6 @@ const getNews = (currency, offset, limit) => {
 export {
     getHistoricalPrices,
     getHistoricalCandles,
+    getPredictionPrice,
     getNews
 };

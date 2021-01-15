@@ -36,6 +36,12 @@ class RealtimeSocket {
         this.io.in(`${symbol}_${frame}`).emit("livecandle", data);
     }
 
+    publishPredictionCandle(symbol, frame, data) {
+        symbol = this._sanitizeSymbol(symbol);
+        frame = this._sanitizeSymbol(frame, false);
+        this.io.in(`${symbol}_${frame}`).emit("predictioncandle", data);
+    }
+
     publishPrice(symbol, data) {
         symbol = this._sanitizeSymbol(symbol);
         this.lastPrices[symbol] = data;

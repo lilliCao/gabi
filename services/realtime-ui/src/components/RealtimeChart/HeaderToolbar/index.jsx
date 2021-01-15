@@ -5,18 +5,9 @@ import LineIcon from "../../../assets/images/line-chart.png";
 import CandlestickIcon from "../../../assets/images/candlestick-chart.png";
 
 
-function HeaderToolbar({currency, chartType, interval, onChangeCurrency, onChangeInterval, onChangeChartType}) {
+function HeaderToolbar({frames, currency, chartType, frame, onChangeCurrency, onChangeFrame, onChangeChartType}) {
     const currencies = [
         {id: "EURUSD", name: "EURUSD"},
-    ];
-    const intervals = [
-        {id: "m1", name: "m1"},
-        {id: "m30", name: "m30"},
-
-        {id: "H1", name: "H1"},
-        {id: "H4", name: "H4"},
-
-        {id: "D1", name: "D1"},
     ];
 
     const chartTypes = [
@@ -24,7 +15,7 @@ function HeaderToolbar({currency, chartType, interval, onChangeCurrency, onChang
         {id: "candles", name: "Candles", icon: CandlestickIcon},
     ];
     const [currencyId, setCurrencyId] = useState(currency);
-    const [intervalId, setIntervalId] = useState(interval);
+    const [frameId, setFrameId] = useState(frame);
     const [selectedChartTypeId, setChartTypeId] = useState(chartType);
 
     /** line chart
@@ -41,10 +32,10 @@ function HeaderToolbar({currency, chartType, interval, onChangeCurrency, onChang
         }
     };
 
-    const handleSelectInterval = (values) => {
-        setIntervalId(values[0].id);
-        if (onChangeInterval) {
-            onChangeInterval(values[0].id)
+    const handleSelectFrame = (values) => {
+        setFrameId(values[0].id);
+        if (onChangeFrame) {
+            onChangeFrame(values[0].id)
         }
     };
 
@@ -70,15 +61,15 @@ function HeaderToolbar({currency, chartType, interval, onChangeCurrency, onChang
             </div>
 
             <div style={{width: "150px", maxWidth: "150px"}}>
-                <Select options={intervals}
-                        values={[intervals.find(opt => opt.id === intervalId)]}
+                <Select options={frames}
+                        values={[frames.find(opt => opt.id === frameId)]}
                         labelField='name'
                         valueField='id'
                         dropdownHandle={false}
                         keepOpen={false}
                         searchable={false}
                         dropdownGap={-3}
-                        onChange={handleSelectInterval}
+                        onChange={handleSelectFrame}
                 />
             </div>
 

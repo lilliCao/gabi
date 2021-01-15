@@ -173,7 +173,9 @@ class FXCMCrawler {
             console.debug(`Error: The request was not executed by the server: ${JSON.stringify(data)}`);
             return;
         }
+        console.log('Historical candles for', offerId, period, params, data.candles.length)
         return data.candles.map(candle => ({
+            _id: candle[0],
             openBid: candle[1],
             closeBid: candle[2],
             highBid: candle[3],
@@ -182,7 +184,7 @@ class FXCMCrawler {
             closeAsk: candle[6],
             highAsk: candle[7],
             lowAsk: candle[8],
-            count: candle[9],
+            volume: candle[9],
             ts: candle[0],
             frame: period,
             symbol: 'EURUSD',

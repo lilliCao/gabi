@@ -5,7 +5,7 @@ class CandleUpdater {
         this.periods = {
             'm1': 60,
             'm30': 60 * 30,
-            'h1': 60 * 60,
+            'H1': 60 * 60,
         };
 
         this.lastPublish = {};
@@ -86,6 +86,7 @@ class CandleUpdater {
 
     _publish(p) {
         const mergedCandle = {
+            _id: this.currentBid[p].ts,
             openBid: this.currentBid[p].o,
             highBid: this.currentBid[p].h,
             lowBid: this.currentBid[p].l,
@@ -109,6 +110,7 @@ class CandleUpdater {
 
     _publishLive(p) {
         const mergedCandle = {
+            _id: this.currentBid[p].ts,
             openBid: this.currentBid[p].o,
             highBid: this.currentBid[p].h,
             lowBid: this.currentBid[p].l,

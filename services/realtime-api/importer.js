@@ -30,7 +30,7 @@ class CandleImporter {
     async start(fromTime) {
         await this._connectDB();
         const now = fromTime;
-        const startTs = now - 60 * 60 * 24;
+        // let startTs = now - 60 * 60 * 24;
         if (this.onConnected) {
             this.onConnected();
         }
@@ -39,12 +39,12 @@ class CandleImporter {
 
         // 1 minute for 3 years
         let num = 10000;
-        for (let i = 0; i < 60 * 24 * 365 * 3; i += num) {
+        for (let i = 0; i < 60 * 24 * 365 * 2; i += num) {
             const to = now - i * 60;
             const from = Math.max(now - i - num, 0);
             // const from = to - 10000 * 60;
             candleScenes.push({offerId: 1, periodId: 'm1', num, to});
-            if (from <= startTs) break;
+            // if (from <= startTs) break;
         }
 
         // 30 minutes for 3 years
@@ -57,7 +57,7 @@ class CandleImporter {
 
         // 1 hour in year
         num = 8760;
-        for (let i = 0; i < 24 * 365 * 3; i += num) {
+        for (let i = 0; i < 24 * 365 * 5; i += num) {
             const to = now - i * 60 * 60;
             // const from = to - 10000 * 60 * 60;
             candleScenes.push({offerId: 1, periodId: 'H1', num, to})
@@ -70,7 +70,9 @@ class CandleImporter {
                 to: candleScene.to,
                 from: candleScene.from,
             });
-            await this._putCandleToDb("EURUSD", candleScene.periodId, candles);
+            if (candles != null) {
+                await this._putCandleToDb("EURUSD", candleScene.periodId, candles);
+            }
         }
     }
 
@@ -105,10 +107,10 @@ class CandleImporter {
                     json[k] = json[k].toFixed(5);
                 }
             }
-            return json
+            return {...json, _id: json['ts']}
         };
         data = data.map(priceTransform);
-        await this.db.collection(`${symbol}_${frame}`).ensureIndex('ts');
+        await this.db.collection(`${symbol}_${frame}`);
         return this.db.collection(`${symbol}_${frame}`).insertMany(data, {
             writeConcern: {w: 1, j: true},
             ordered: false

@@ -26,7 +26,7 @@ RUN pip3 install kafka-python pyspark
 RUN apk add --no-cache python3-dev libstdc++ && \
     apk add --no-cache g++ && \
     ln -s /usr/include/locale.h /usr/include/xlocale.h && \
-    pip3 install numpy
+    pip3 install numpy requests
 
 RUN pip3 install --force-reinstall pyspark==3.0.1
 WORKDIR /kafka
