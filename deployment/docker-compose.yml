@@ -143,17 +143,17 @@ services:
       - PAGES=5
       - "KAFKA=kafka:9092"
 
-  flask-ml:
-    build:
-      context: ../services/flask-ml
-    container_name: flask-ml
-    networks:
-      - gabi
-    restart: on-failure
-    volumes:
-      - ../services/flask-ml:/app
-    ports:
-      - 5000:5000
+#  flask-ml:
+#    build:
+#      context: ../services/flask-ml
+#    container_name: flask-ml
+#    networks:
+#      - gabi
+#    restart: on-failure
+#    volumes:
+#      - ../services/flask-ml:/app
+#    ports:
+#      - 5000:5000
 
   viewer:
     build:

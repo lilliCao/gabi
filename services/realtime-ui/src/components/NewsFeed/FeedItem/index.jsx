@@ -14,7 +14,7 @@ function FeedItem({item}) {
             </div>
             <div className='news-footer'>
                 <div className='source'>
-                    von {item.source}
+                    from {item.source}
                 </div>
                 <div className='news-created_time'>
                     {moment(item.created_at).fromNow()}

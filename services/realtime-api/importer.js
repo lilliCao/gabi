@@ -24,6 +24,7 @@ class CandleImporter {
         this.db = null;
         this.dbName = dbName;
         this.onConnected = onConnected;
+        this.ensuredIndicies = {}
     }
 
 
@@ -34,16 +35,27 @@ class CandleImporter {
         if (this.onConnected) {
             this.onConnected();
         }
+        /**
+         EUR/USD: 1
+         USD/JPY: 2
+         EUR/JPY: 10
+         */
+        const offerTableMap = {
+            "EUR/USD": {offerId: 1, symbol: "EUR/USD"},
+            "USD/JPY": {offerId: 2, symbol: "USD/JPY"},
+            "EUR/JPY": {offerId: 10, symbol: "EUR/JPY"},
+        };
 
         const candleScenes = [];
+        const currency = offerTableMap['USD/JPY'];
 
-        // 1 minute for 3 years
+        // 1 minute for 20 years
         let num = 10000;
-        for (let i = 0; i < 60 * 24 * 365 * 2; i += num) {
+        for (let i = 0; i < 60 * 24 * 365 * 25; i += num) {
             const to = now - i * 60;
             const from = Math.max(now - i - num, 0);
             // const from = to - 10000 * 60;
-            candleScenes.push({offerId: 1, periodId: 'm1', num, to});
+            candleScenes.push({offerId: currency.offerId, periodId: 'm1', num, to});
             // if (from <= startTs) break;
         }
 
@@ -52,15 +64,15 @@ class CandleImporter {
         for (let i = 0; i < 2 * 24 * 365 * 3; i += num) {
             const to = now - i * 30 * 60;
             // const from = to - 10000 * 60 * 30;
-            candleScenes.push({offerId: 1, periodId: 'm30', num, to})
+            candleScenes.push({offerId: currency.offerId, periodId: 'm30', num, to})
         }
 
-        // 1 hour in year
+        // 1 hour in 3 year
         num = 8760;
-        for (let i = 0; i < 24 * 365 * 5; i += num) {
+        for (let i = 0; i < 24 * 365 * 3; i += num) {
             const to = now - i * 60 * 60;
             // const from = to - 10000 * 60 * 60;
-            candleScenes.push({offerId: 1, periodId: 'H1', num, to})
+            candleScenes.push({offerId: currency.offerId, periodId: 'H1', num, to})
         }
 
 
@@ -70,8 +82,11 @@ class CandleImporter {
                 to: candleScene.to,
                 from: candleScene.from,
             });
-            if (candles != null) {
-                await this._putCandleToDb("EURUSD", candleScene.periodId, candles);
+            if (candles != null && _.isArray(candles) && candles.length > 0) {
+                await this._putCandleToDb(currency.symbol, candleScene.periodId, candles);
+                if (candles.length < candleScene.num) {
+                    continue
+                }
             }
         }
     }
@@ -107,11 +122,16 @@ class CandleImporter {
                     json[k] = json[k].toFixed(5);
                 }
             }
-            return {...json, _id: json['ts']}
+            return json
         };
         data = data.map(priceTransform);
-        await this.db.collection(`${symbol}_${frame}`);
-        return this.db.collection(`${symbol}_${frame}`).insertMany(data, {
+        const collection = `${symbol}_${frame}`;
+        if (!this.ensuredIndicies.hasOwnProperty(collection)) {
+            await this.db.collection(collection).createIndex({ts: 1}).then(() => {
+                this.ensuredIndicies[collection] = true;
+            });
+        }
+        return this.db.collection(collection).insertMany(data, {
             writeConcern: {w: 1, j: true},
             ordered: false
         }).catch(e => {

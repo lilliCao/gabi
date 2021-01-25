@@ -36,6 +36,12 @@ class FXCMCrawler {
         this.reconnectionDelay = 500;
         this.checkInterval = 5 * 1000;
         this.maxTimeGap = 30 * 1000;
+        this.offerTable = {
+            1: "EUR/USD",
+            2: "USD/JPY",
+            3: "EUR/JPY",
+        };
+
     }
 
     /**
@@ -163,6 +169,8 @@ class FXCMCrawler {
     async getCandles(offerId, period, params) {
         console.log('Getting historical candles from market data', offerId, period, params);
         const query = querystring.stringify(params);
+        const url = `${this.baseUrl}/candles/${offerId}/${period}?` + query;
+        console.log('url', url)
         const response = await axios.get(`${this.baseUrl}/candles/${offerId}/${period}?` + query, {headers: this.headers});
         if (response.status !== 200) {
             console.debug(`An error occured while subscribing: ${response}`);
@@ -175,7 +183,6 @@ class FXCMCrawler {
         }
         console.log('Historical candles for', offerId, period, params, data.candles.length)
         return data.candles.map(candle => ({
-            _id: candle[0],
             openBid: candle[1],
             closeBid: candle[2],
             highBid: candle[3],
@@ -187,7 +194,7 @@ class FXCMCrawler {
             volume: candle[9],
             ts: candle[0],
             frame: period,
-            symbol: 'EURUSD',
+            symbol: this.offerTable[offerId],
         }));
     }
 

@@ -41,14 +41,14 @@ const LineChart = forwardRef((props, ref) => {
                 // timeVisible: true,
                 // secondsVisible: false,
 
-                tickMarkFormatter: (time) => {
+                // tickMarkFormatter: (time) => {
                     // console.log('time', time)
                     //     //const date = new Date(time.year, time.month, time.day);
                     //     //return date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate();
 //                    return moment(time).utc().format("HH:mm:ss")
-                    return `${time}`
+//                     return `${time}`
 
-                },
+                // },
                 borderColor: '#485c7b',
             },
             ...config.general,
@@ -73,7 +73,6 @@ const LineChart = forwardRef((props, ref) => {
 
     return (
         <BaseChart chartRef={chart} containerRef={chartContainerRef}>
-            EUR/USD - M1
         </BaseChart>
 
     );

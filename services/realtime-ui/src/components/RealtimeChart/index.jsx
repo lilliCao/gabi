@@ -2,7 +2,6 @@ import React, {useEffect, useRef, useState} from 'react';
 import LineChart from "./LineChart";
 import CandlestickChart from "./CandlestickChart";
 
-import useSocket from "../../hooks/useSocket";
 import HeaderToolbar from "./HeaderToolbar";
 import {getHistoricalCandles, getPredictionPrice} from "../../services/historicalData";
 
@@ -23,9 +22,8 @@ const frameMap = {
     }
 }
 
-function RealtimeChart() {
-    const socket = useSocket();
-    const [currChartType, setChartType] = useState(Object.keys(ChartTypes)[1]);
+function RealtimeChart({socket}) {
+    const [currChartType, setChartType] = useState(Object.keys(ChartTypes)[0]);
     const [CurrentChart, setCurrentChart] = useState();
     const chartRef = useRef();
     const [currency, setCurrency] = useState('EURUSD');
@@ -47,7 +45,7 @@ function RealtimeChart() {
     //     setCurrentCandle(old => calculateNewCandle(old, data, 60));
     // };
     const fetchData = (currency, frame) => {
-        const from = Math.round((new Date().getTime() - 60000 * 60 * 100) / 1000);
+        const from = Math.round((new Date().getTime() - frameMap[frame].interval * 1000 * 240 * 20) / 1000);
         getHistoricalCandles(currency, frame, from).then(res => {
             const data = res.map(item => {
                 return {
@@ -58,28 +56,32 @@ function RealtimeChart() {
                     close: item.closeBid,
                 }
             });
-            getChart().setData(data);
+            if (getChart()) {
+                getChart().setData(data);
+            }
             setCurrentCandle(data[data.length - 1]);
         });
         getPredictionPrice(currency, frame, from).then(res => {
             const data = res.map(item => {
                 return {
                     // time: item.ts,
-                    time: item.ts - frameMap[frame].interval,
+                    time: item.ts,
                     value: item.closeBid
                 }
             });
-            getChart().setPrediction(data);
+            if (getChart()) {
+                getChart().setPrediction(data);
+            }
         });
     }
 
     useEffect(() => {
+        fetchData(currency, currentFrame);
         socket.on('predictioncandle', prediction => {
             if (prediction.ts > currentPrediction.time) {
-                console.log('chart new prediction', prediction)
                 setCurrentPrediction({
                     // time: prediction.ts,
-                    time: prediction.ts - frameMap[currentFrame].interval,
+                    time: prediction.ts,
                     value: prediction.closeBid
                 })
             }
@@ -94,10 +96,8 @@ function RealtimeChart() {
                 close: candle.closeBid,
             });
         });
-        socket.emit('subscribe', 'EURUSD_m1');
-        //socket.emit('subscribe', 'EURUSD');
+        socket.emit('subscribe', `EURUSD_${currentFrame}`);
         socket.on('candle', item => {
-            console.log("Candle update", item);
             if (item.ts <= currentCandle.time) return;
 
             setCurrentCandle({
@@ -108,19 +108,15 @@ function RealtimeChart() {
                 close: item.closeBid,
             });
         });
-        fetchData(currency, currentFrame);
-        return () => {
-            socket.disconnect();
-        }
-    }, [socket, currChartType]);
+    }, [socket, currChartType, currentFrame]);
 
     useEffect(() => {
-        if (!CurrentChart || currentCandle.time === 0) return;
+        if (!CurrentChart || (currentCandle && currentCandle.time === 0)) return;
         getChart().updateData(currentCandle);
     }, [currentCandle]);
 
     useEffect(() => {
-        if (!CurrentChart || currentPrediction.time === 0) return;
+        if (!CurrentChart || (currentPrediction && currentPrediction.time === 0)) return;
         getChart().updatePrediction(currentPrediction);
     }, [currentPrediction])
 
@@ -129,6 +125,7 @@ function RealtimeChart() {
         setCurrentCandle({time: 0, open: 0, high: 0, low: 9999, close: 0});
         setCurrentPrediction({time: 0, value: 0});
         fetchData(currency, frame);
+
     }
 
     const handleChangeCurrency = currency => {
@@ -137,12 +134,14 @@ function RealtimeChart() {
     };
 
     const handleChangeFrame = frame => {
+        socket.emit('unsubscribe', `EURUSD_${currentFrame}`)
         setCurrentFrame(frame);
         resetData(currency, frame);
     };
 
     const handleChangeChartType = chartType => {
         setChartType(chartType);
+        // resetData(currency, currentFrame);
     };
 
     return (
@@ -164,4 +163,4 @@ function RealtimeChart() {
     );
 }
 
-export default RealtimeChart;
+export default React.memo(RealtimeChart);

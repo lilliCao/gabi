@@ -2,10 +2,10 @@ import React from 'react';
 import "./styles.css";
 import moment from "moment";
 
-function Message({message}) {
-    return(
+function Message({msg, timestamp}) {
+    return (
         <div className='message'>
-            - {moment(message.ts * 1000).utc().format("DD.MM.YYYY hh:mm:ss")} : Price {message.closeBid}
+            [{moment(timestamp).format("DD/MM/YYYY HH:mm:ss")}] {msg}
         </div>
     )
 }

@@ -86,7 +86,6 @@ class CandleUpdater {
 
     _publish(p) {
         const mergedCandle = {
-            _id: this.currentBid[p].ts,
             openBid: this.currentBid[p].o,
             highBid: this.currentBid[p].h,
             lowBid: this.currentBid[p].l,
@@ -110,7 +109,6 @@ class CandleUpdater {
 
     _publishLive(p) {
         const mergedCandle = {
-            _id: this.currentBid[p].ts,
             openBid: this.currentBid[p].o,
             highBid: this.currentBid[p].h,
             lowBid: this.currentBid[p].l,

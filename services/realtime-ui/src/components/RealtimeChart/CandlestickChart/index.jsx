@@ -10,15 +10,31 @@ const CandlestickChart = forwardRef((props, ref) => {
     const [candleSeries, setCandleSeries] = useState([]);
     const [predictionSeries, setPredictionSeries] = useState([]);
     const [currCandle, setCurrCandle] = useState();
-
+    const [candles, setCandles] = useState([]);
 
     useImperativeHandle(ref, () => ({
         updateData(data) {
             if (!currCandle) return;
+            if (currCandle && data.time > currCandle.time) {
+                data = {...data, open: currCandle.close}
+                // data.open = currCandle.close;
+            }
             candleSeries.update(data);
-            setCurrCandle(data)
+            setCurrCandle(data);
+            // if (currCandle && data.time > candles[candles.length - 1].time) {
+            //     const newCandles = [...candles, {...data, open: candles[candles.length - 1].close}];
+            //     setCandles(newCandles);
+            //     candleSeries.setData(newCandles);
+            // } else {
+            //     candleSeries.update(data);
+            // }
+            // setCurrCandle(data)
         },
         setData(data) {
+            for (let i = 1; i < data.length; i++) {
+                data[i].open = data[i - 1].close;
+            }
+            setCandles(data);
             candleSeries.setData(data);
             setCurrCandle(data[data.length - 1]);
         },
@@ -44,9 +60,9 @@ const CandlestickChart = forwardRef((props, ref) => {
                 // secondsVisible: false,
 
                 tickMarkFormatter: (time) => {
-                    //     // console.log('time', time)
-                    //     //     //const date = new Date(time.year, time.month, time.day);
-                    //     //     //return date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate();
+                //     //     // console.log('time', time)
+                //     //     //     //const date = new Date(time.year, time.month, time.day);
+                //     //     //     //return date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate();
                     return moment(time * 1000).utc().format("HH:mm")
                 },
                 borderColor: '#485c7b',
@@ -71,7 +87,6 @@ const CandlestickChart = forwardRef((props, ref) => {
 
     return (
         <BaseChart chartRef={chart} containerRef={chartContainerRef}>
-            EUR/USD - M1
         </BaseChart>
     )
 });

@@ -20,6 +20,9 @@ class RealtimeSocket {
             socket.on('subscribe', (room) => {
                 this._subscribe(socket, room);
             });
+            socket.on('unsubscribe', (room) => {
+                this._unsubscribe(socket, room);
+            })
         });
         this.server.listen(port);
     }
@@ -70,6 +73,15 @@ class RealtimeSocket {
         socket.join(room);
         socket.emit('price', this.lastPrices[room]);
         console.log("Send to", socket.id, this.lastPrices[room])
+    }
+
+    _unsubscribe(socket, room) {
+        if (!this._isRoomValid(room)) {
+            return;
+        }
+        room = this._sanitizeSymbol(room, false);
+        console.log(socket.id, "left", room);
+        socket.leave(room);
     }
 
     _isRoomValid(name) {

@@ -12,9 +12,11 @@ const fxcmToken = process.env.FXCM_TOKEN || '0004ac72171d396154ddaebc87487cf326c
 
 async function main() {
     let importStarted = false;
+    let lastPredictedTimestamp = {}
 
     const store = new DataStore(dbUrl, dbName);
     await store.connect();
+
     apiServer.datastore = store;
 
     const rtSocket = new RealtimeSocket(apiServer);
@@ -34,7 +36,8 @@ async function main() {
 
     const onCandle = (candleUpdate) => {
         const {symbol, frame, ...data} = candleUpdate;
-        console.log("Candle received:", data);
+        console.debug(`[${new Date(Date.now()).toISOString()}]: Candle received [${symbol}_${frame}] open: ${data.openBid}, high: ${data.highBid}, low: ${data.lowBid}, close: ${data.closeBid}, ts: ${data.ts}`);
+
         store.putCandle(symbol, frame, data);
         rtSocket.publishCandle(symbol, frame, data);
         if (!importStarted) {
@@ -45,7 +48,8 @@ async function main() {
 
     const onLiveCandle = (candleUpdate) => {
         const {symbol, frame, ...data} = candleUpdate;
-        // console.log("Live candle received:", data);
+        console.debug(`[${new Date(Date.now()).toISOString()}]: Live candle received [${symbol}_${frame}] open: ${data.openBid}, high: ${data.highBid}, low: ${data.lowBid}, close: ${data.closeBid}, ts: ${data.ts}`);
+
         rtSocket.publishLiveCandle(symbol, frame, data);
         if (!importStarted) {
             importStarted = true;
@@ -53,14 +57,20 @@ async function main() {
         }
     };
 
-    const onPredictionCandle = (prediction) => {
-        console.log('Prediction received:', prediction);
-        const {symbol, frame, data} = prediction;
-        if (data) {
-            for (let d of data) {
-                const t = {ts: d[1], closeBid: d[0].toString(), _id: d[1]}
+    const onPredictionCandle = (data) => {
+        const {symbol, frame, prediction, ts} = data;
+        console.debug(`[${new Date(Date.now()).toISOString()}]: Prediction received [${symbol}_${frame}] prediction: ${prediction}, ts: ${ts}`);
+        if (symbol && frame && prediction && ts) {
+            const key = `${symbol}_${frame}`;
+            if (!lastPredictedTimestamp.hasOwnProperty(key)) {
+                lastPredictedTimestamp[key] = 0
+            }
+            const t = {ts, closeBid: prediction.toString()};
+            if (lastPredictedTimestamp[key] < t.ts) {
+                console.log('Publish prediction')
                 store.putPrediction(symbol, frame, t);
                 rtSocket.publishPredictionCandle(symbol, frame, t);
+                lastPredictedTimestamp[key] = t.ts;
             }
         }
     }

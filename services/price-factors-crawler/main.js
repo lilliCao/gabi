@@ -25,9 +25,7 @@ async function main() {
     app.get('/candles', async (req, res) => {
         const {offerId, period, ...params} = req.query;
         try {
-            const data = await crawler.getCandles(offerId, period, Object.keys(params).map(key => {
-                return {[key]: parseInt(params[key])}
-            }));
+            const data = await crawler.getCandles(offerId, period, params)
             res.json(data);
         } catch (e) {
             res.json({err: `${e}`});

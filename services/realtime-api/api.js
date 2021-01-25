@@ -33,6 +33,7 @@ app.get('/api/v1/pairs/:pair/forecast/:frame', async (req, res) => {
 });
 
 app.get('/api/v1/pairs/:pair/candles/:frame', async (req, res) => {
+    console.log('request candles')
     const {pair, frame} = req.params;
     let {from, to} = req.query;
     if (from == null) {
@@ -51,7 +52,7 @@ app.get('/api/v1/pairs/:pair/candles/:frame', async (req, res) => {
         res.status(400).json({err: 'invalid time window', e: `${e}`});
         return;
     }
-
+    console.log('getCandles', frame, from, to)
     const data = await app.datastore.getCandles(pair, frame, from, to);
     res.json(data);
 });

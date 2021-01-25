@@ -1,43 +1,27 @@
 import React, {useEffect, useState} from 'react';
-import useSocket from "../../hooks/useSocket";
 import Message from "./Message";
 import "./styles.css"
+import eventBus from "../../services/eventBus";
 
 
 function SystemMessagePanel() {
-    const socket = useSocket();
     const [messages, setMessages] = useState([]);
-    const [currentMessage, setCurrentMessage] = useState();
-
-    useEffect(() => {
-        socket.on('predictioncandle', prediction => {
-            console.log('new prediction', prediction)
-            if (currentMessage && currentMessage.ts === prediction.ts) return;
-            setCurrentMessage(prediction);
-
-        });
-        // return () => {
-        //     socket.disconnect()
-        // }
-    }, [socket])
-
-    useEffect(() => {
-        if (!currentMessage) return;
-        if (messages.length > 0 && messages[messages.length - 1].ts === currentMessage.ts) return;
-        setMessages([...messages, currentMessage]);
-
-    }, [currentMessage]);
-
-
+    useEffect(()=>{
+        eventBus.on('system_msg', (msg) => {
+            setMessages(msgs => [...msgs, msg])
+        })
+    }, [])
     return (
         <div className='messages-panel-wrapper'>
-            <div className='messages-header'> System message</div>
+            <div className='messages-header'>System messages</div>
             <div className='messages-list'>
                 {
                     messages.map(msg =>
                         <Message
-                            key={msg.ts}
-                            message={msg}/>)
+                            key={msg.timestamp}
+                            timestamp={msg.timestamp}
+                            msg={msg.message}
+                        />)
                 }
             </div>
 
