@@ -110,7 +110,7 @@ class Datastore {
 
     _ensureIndex(collection, key) {
         if (!this.ensuredIndicies.hasOwnProperty(collection)) {
-            return this.db.collection(collection).createIndex({[key]: 1}).then(() => {
+            return this.db.collection(collection).createIndex({[key]: 1}, {unique: true}).then(() => {
                 this.ensuredIndicies[collection] = true;
             });
         }

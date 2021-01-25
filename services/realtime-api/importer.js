@@ -45,9 +45,10 @@ class CandleImporter {
             "USD/JPY": {offerId: 2, symbol: "USD/JPY"},
             "EUR/JPY": {offerId: 10, symbol: "EUR/JPY"},
         };
+        const currency = offerTableMap['EUR/JPY'];
+
 
         const candleScenes = [];
-        const currency = offerTableMap['USD/JPY'];
 
         // 1 minute for 20 years
         let num = 10000;
@@ -127,7 +128,7 @@ class CandleImporter {
         data = data.map(priceTransform);
         const collection = `${symbol}_${frame}`;
         if (!this.ensuredIndicies.hasOwnProperty(collection)) {
-            await this.db.collection(collection).createIndex({ts: 1}).then(() => {
+            await this.db.collection(collection).createIndex({ts: 1}, {unique: true}).then(() => {
                 this.ensuredIndicies[collection] = true;
             });
         }
